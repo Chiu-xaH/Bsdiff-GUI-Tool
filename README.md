@@ -2,7 +2,7 @@
 
 ![截图](/img/shot.jpg)
 
-一个简陋的GUI工具，调用了[Bsdiff](/Bsdiff-C)编译库
+一个简陋的GUI工具，调用了[Bsdiff](/Bsdiff)编译库
 
 ## 功能
 生成补丁包、合并补丁包、检验
