@@ -153,7 +153,7 @@ fun getPatchFileName(newFileName : String,oldFileName : String) : String {
     val e = getFileExtension(newFileName)
     val o = getFileNameWithoutExtension(oldFileName)
     val n = getFileNameWithoutExtension(newFileName)
-    return o + "_patched_" + n + "." + e
+    return o + "_to_" + n + "." + "patch"
 }
 
 // 在共享模块中定义expect函数

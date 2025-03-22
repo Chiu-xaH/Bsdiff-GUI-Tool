@@ -50,7 +50,7 @@ fun App() {
                         title = {
                             Box(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "增量更新工具 1.0",
+                                    text = "增量更新工具 1.0.1",
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.primary

@@ -10,6 +10,6 @@
 可以用来构建APK相邻版本的差分包
 
 ## 适配平台
-Windows 11 x64
+Windows 11 x64 , Android(后续适配)
 
-Android(后续适配)
+## (Android库)[https://github.com/Chiu-xaH/Bsdiff-Lib]

@@ -5,8 +5,6 @@ import java.io.File
 class BsdiffJNI {
     companion object {
         init {
-            // 加载本地库
-//            val dllPath = File("bsdiff.dll").absolutePath
             System.loadLibrary("bsdiff")
         }
     }
