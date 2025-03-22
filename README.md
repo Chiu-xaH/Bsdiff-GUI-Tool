@@ -2,7 +2,7 @@
 
 ![截图](/img/shot.jpg)
 
-一个简陋的GUI工具，调用了[Bsdiff](/Bsdiff)编译库
+一个简陋的GUI工具，调用了[Bsdiff](/Bsdiff)
 
 ## 功能
 生成补丁包、合并补丁包、检验
@@ -12,4 +12,4 @@
 ## 适配平台
 Windows 11 x64 , Android(后续适配)
 
-## (Android库)[https://github.com/Chiu-xaH/Bsdiff-Lib]
+## [Android库](https://github.com/Chiu-xaH/Bsdiff-Lib)
