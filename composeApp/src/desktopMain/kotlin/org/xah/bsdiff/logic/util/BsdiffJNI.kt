@@ -1,7 +1,5 @@
 package org.xah.bsdiff.logic.util
 
-import java.io.File
-
 class BsdiffJNI {
     companion object {
         init {

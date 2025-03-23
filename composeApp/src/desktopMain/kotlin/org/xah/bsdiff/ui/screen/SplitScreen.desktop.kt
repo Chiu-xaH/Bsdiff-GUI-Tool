@@ -1,5 +1,7 @@
 package org.xah.bsdiff.ui.screen
 
+import java.io.File
+
 
 actual fun getDefaultPath(path: String): String {
     val file = java.io.File(path)
@@ -11,3 +13,4 @@ actual fun getFileName(path: String): String {
     return file.name  // 获取文件名（包括扩展名）
 }
 
+actual fun applyPath(path: String, file: String): String = File(path,file).absolutePath

@@ -15,3 +15,7 @@ actual fun createPatch(
 ) : Boolean {
     return false
 }
+
+actual fun applyPath(path: String, file: String): String {
+    TODO("Not yet implemented")
+}

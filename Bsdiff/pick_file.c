@@ -1,38 +1,5 @@
 #include <windows.h>
 #include <wchar.h>
-
-// 返回宽字符路径
-//__declspec(dllexport) const char* pick_file() {
-//    static char file_name[MAX_PATH] = {0};
-//
-//    // 创建文件选择对话框
-//    OPENFILENAME ofn;       // common dialog box structure
-//    HWND hwnd = NULL;       // owner window
-//    ZeroMemory(&ofn, sizeof(ofn));
-//
-//    // 设置对话框参数
-//    ofn.lStructSize = sizeof(ofn);
-//    ofn.hwndOwner = hwnd;
-//    ofn.lpstrFile = file_name;
-//    ofn.lpstrFile[0] = '\0';
-//    ofn.nMaxFile = sizeof(file_name);
-//    ofn.lpstrFilter = "All\0";
-//    ofn.nFilterIndex = 1;
-//    ofn.lpstrFileTitle = NULL;
-//    ofn.nMaxFileTitle = 0;
-//    ofn.lpstrInitialDir = NULL;
-//    ofn.lpstrTitle = "Select a File";
-//    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-//
-//    // 显示对话框
-//    if (GetOpenFileName(&ofn) == TRUE) {
-//        return file_name;
-//    } else {
-//        return NULL;
-//    }
-//}
-
-#include <windows.h>
 #include <stdio.h>
 
 __declspec(dllexport) const char* pick_file() {

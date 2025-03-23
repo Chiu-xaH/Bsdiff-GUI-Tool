@@ -5,16 +5,7 @@ import java.io.File
 import java.io.IOException
 
 
-actual suspend fun pickFile(): String? {
-//    val fileChooser = JFileChooser()
-//    val result = fileChooser.showOpenDialog(null)
-//    return if (result == JFileChooser.APPROVE_OPTION) {
-//        fileChooser.selectedFile.absolutePath
-//    } else {
-//        null
-//    }
-    return BsdiffJNI().pickFile()
-}
+actual suspend fun pickFile(): String? = BsdiffJNI().pickFile()
 
 actual fun openFileExplorer(path : String) {
     if (Desktop.isDesktopSupported()) {

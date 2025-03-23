@@ -56,40 +56,32 @@ fun MergeScreen() {
                     }
                 )
             }
-            newFilePath.let {
+            if(newFilePath.isNotEmpty() && patchFilePath != null && oldFilePath != null) {
                 val newFileName = oldFileName + "_merged." + getFileExtension(oldFileName)
-                if(it.isNotEmpty()) {
-                    StyleCardListItem(
-                        headlineContent = { Text(it) },
-                        supportingContent = { Text("生成${newFileName}到目录") },
-                        trailingContent = {
-                            Button(
-                                onClick = {
-                                    cor.launch {
-                                        // 开始生成补丁包
-                                        isSuccess = patchFilePath?.let { it1 ->
-                                            oldFilePath?.let { it2 ->
-                                                mergePatch(it2, it1,newFilePath + newFileName) { it4 ->
-                                                    loading = it4
-                                                }
-                                            }
-                                        }
+                StyleCardListItem(
+                    headlineContent = { Text(newFilePath) },
+                    supportingContent = { Text("生成${newFileName}到目录") },
+                    trailingContent = {
+                        Button(
+                            onClick = {
+                                cor.launch {
+                                    // 开始生成补丁包
+                                    isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName)) { load ->
+                                        loading = load
                                     }
-                                },
-                                enabled = canStartMerge(patchFilePath,oldFilePath),
-                                shape = MaterialTheme.shapes.medium,
-                            ) {
-                                Text("生成合并包")
-                            }
+                                }
+                            },
+                            enabled = canStartMerge(patchFilePath,oldFilePath),
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Text("生成合并包")
                         }
-                    )
-                }
+                    }
+                )
             }
-
         }
     }
-
-    SplitLoadingUI(newFilePath,loading,isSuccess)
+    DoLoadingUI(newFilePath,loading,isSuccess)
 }
 
 

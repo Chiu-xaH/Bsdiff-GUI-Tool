@@ -28,5 +28,5 @@ add_library(bsdiff_win_master SHARED
 set_target_properties(bsdiff_win_master PROPERTIES
     OUTPUT_NAME "bsdiff"  # 生成的 DLL 文件将名为 bsdiff-win.dll
     PREFIX ""             # 不使用前缀 "lib"（Windows 上不会用 "lib" 前缀）
-    SUFFIX ".so"         # 确保文件扩展名为 .dll
+    SUFFIX ".dll"         # 确保文件扩展名为 .dll
 )

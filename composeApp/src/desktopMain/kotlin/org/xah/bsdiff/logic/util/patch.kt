@@ -2,6 +2,9 @@ package org.xah.bsdiff.logic.util
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
 
 actual suspend fun createPatch(
     oldFilePath: String,
@@ -31,14 +34,11 @@ actual suspend fun mergePatch(
     // 加载
     callback(true)
     // 启动一个协程进行修补操作
-//    println(oldFilePath)
-//    println(patchFilePath)
-//    println(newFilePath)
     val result = withContext(Dispatchers.IO) {
         val jni = BsdiffJNI()
         jni.merge(oldFilePath,patchFilePath, newFilePath)
     }
-//    println(result)
     callback(false)
     return result == 1
 }
+

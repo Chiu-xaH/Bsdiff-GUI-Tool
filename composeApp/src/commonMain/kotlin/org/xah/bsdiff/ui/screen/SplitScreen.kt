@@ -62,42 +62,36 @@ fun SplitScreen() {
                     }
                 )
             }
-            patchFilePath.let {
+            if(patchFilePath.isNotEmpty() && oldFilePath != null && newFilePath != null) {
                 val patchFileName = getPatchFileName(newFileName, oldFileName)
-                if(it.isNotEmpty()) {
-                    StyleCardListItem(
-                        headlineContent = { Text(it) },
-                        supportingContent = { Text("生成${patchFileName}到目录") },
-                        trailingContent = {
-                            Button(
-                                onClick = {
-                                    cor.launch {
-                                        // 开始生成补丁包
-                                        oldFilePath?.let { it1 -> newFilePath?.let { it2 ->
-                                            isSuccess = createPatch(it1, it2,patchFilePath + patchFileName) { it ->
-                                                loading = it
-                                            }
-                                        } }
+                StyleCardListItem(
+                    headlineContent = { Text(patchFilePath) },
+                    supportingContent = { Text("生成${patchFileName}到目录") },
+                    trailingContent = {
+                        Button(
+                            onClick = {
+                                cor.launch {
+                                    // 开始生成补丁包
+                                    isSuccess = createPatch(oldFilePath!!, newFilePath!!, applyPath(patchFilePath, patchFileName)) { load ->
+                                        loading = load
                                     }
-                                },
-                                enabled = canStartPatch(newFilePath,oldFilePath),
-                                shape = MaterialTheme.shapes.medium,
-                            ) {
-                                Text("生成补丁包")
-                            }
+                                }
+                            },
+                            enabled = canStartPatch(newFilePath,oldFilePath),
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Text("生成补丁包")
                         }
-                    )
-                }
+                    }
+                )
             }
-
         }
     }
-
-    SplitLoadingUI(patchFilePath,loading,isSuccess)
+    DoLoadingUI(patchFilePath,loading,isSuccess)
 }
 
 @Composable
-fun SplitLoadingUI(path : String?,loading : Boolean,isSuccess : Boolean?,isCheck : Boolean = false) {
+fun DoLoadingUI(path : String?, loading : Boolean, isSuccess : Boolean?, isCheck : Boolean = false) {
     if(loading) {
         Box(modifier = Modifier.fillMaxSize()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -126,7 +120,7 @@ fun SplitLoadingUI(path : String?,loading : Boolean,isSuccess : Boolean?,isCheck
             } else {
                 if(isSuccess == true)"生成成功" else "生成失败"
             },
-            dismissText = if(isSuccess == true && !isCheck) "打开文件夹" else "确定",
+            dismissText = if(isSuccess == true && !isCheck) "打开文件夹" else "好",
         )
     }
 }
@@ -164,3 +158,5 @@ expect fun getFileName(path: String): String
 fun getFileExtension(fileName: String): String = fileName.substringAfterLast(".", "")
 
 fun getFileNameWithoutExtension(fileName: String): String = fileName.substringBeforeLast(".") // 去掉扩展名
+// 连接
+expect fun applyPath(path: String,file : String) : String
