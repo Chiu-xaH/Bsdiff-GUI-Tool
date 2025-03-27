@@ -60,6 +60,12 @@ JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
 }
 
 
+JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_warn
+  (JNIEnv * env, jobject obj) {
+    return warn() ? JNI_TRUE : JNI_FALSE;
+}
+
+
 #ifdef _WIN32
 #include <windows.h>
 #endif

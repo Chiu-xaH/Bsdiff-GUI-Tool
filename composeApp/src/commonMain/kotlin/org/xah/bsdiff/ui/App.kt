@@ -50,7 +50,7 @@ fun App() {
                         title = {
                             Box(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "增量更新工具 1.0.2",
+                                    text = "增量更新工具 1.0.3",
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.primary
@@ -82,7 +82,6 @@ fun App() {
                             }
                         }
                     )
-                    BottomTip("不要使用中文目录 目前会崩溃")
                     Spacer(Modifier.height(10.dp))
                 }
             }

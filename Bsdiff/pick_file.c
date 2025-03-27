@@ -1,6 +1,4 @@
 #include <windows.h>
-#include <wchar.h>
-#include <stdio.h>
 
 __declspec(dllexport) const char* pick_file() {
     static char file_name[MAX_PATH] = {0};

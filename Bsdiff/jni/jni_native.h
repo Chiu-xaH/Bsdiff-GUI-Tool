@@ -18,9 +18,11 @@ JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
 JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
   (JNIEnv *env, jobject obj, jstring oldFilePath, jstring patchFilePath, jstring newFilePath);
 
-JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_PickFile_pickFile
+JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
   (JNIEnv * env, jobject obj);
 
+JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_warn
+  (JNIEnv * env, jobject obj);
 
 #ifdef __cplusplus
 }

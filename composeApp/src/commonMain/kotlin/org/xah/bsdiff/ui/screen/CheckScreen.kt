@@ -72,7 +72,9 @@ fun CheckScreen() {
             }
         }
     }
-    DoLoadingUI(null,loading,isSuccess,true)
+    DoLoadingUI(null,loading,isSuccess,true) {
+        isSuccess = null
+    }
 }
 
 expect fun isSimpleFile(path1 : String,path2 : String, callback: (Boolean) -> Unit) : Boolean

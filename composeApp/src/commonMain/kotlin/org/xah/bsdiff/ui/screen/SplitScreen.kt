@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import org.xah.bsdiff.logic.util.createPatch
 import org.xah.bsdiff.logic.util.openFileExplorer
 import org.xah.bsdiff.logic.util.pickFile
+import org.xah.bsdiff.logic.util.sendNotice
 import org.xah.bsdiff.ui.component.MyDialog
 import org.xah.bsdiff.ui.component.StyleCardListItem
 import org.xah.bsdiff.ui.component.TransplantListItem
@@ -87,31 +88,38 @@ fun SplitScreen() {
             }
         }
     }
-    DoLoadingUI(patchFilePath,loading,isSuccess)
+    DoLoadingUI(patchFilePath,loading,isSuccess) {
+        isSuccess = null
+    }
 }
 
 @Composable
-fun DoLoadingUI(path : String?, loading : Boolean, isSuccess : Boolean?, isCheck : Boolean = false) {
+fun DoLoadingUI(path : String?, loading : Boolean, isSuccess : Boolean?, isCheck : Boolean = false,onSuccess : (Boolean?) -> Unit) {
     if(loading) {
         Box(modifier = Modifier.fillMaxSize()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
+
     var showDialog by remember { mutableStateOf(false) }
-    LaunchedEffect(isSuccess) {
-        if(isSuccess != null) {
-            showDialog = true
-        }
+
+    if(isSuccess != null) {
+        sendNotice("任务完成")
+        showDialog = true
     }
 
     // 结束后弹窗 并调用onLoading回调关闭加载
     if(showDialog) {
         MyDialog(
-            onConfirmation = { showDialog = false },
+            onConfirmation = {
+                onSuccess.invoke(null)
+                showDialog = false
+                             },
             onDismissRequest = {
                 if(isSuccess == true && !isCheck) {
                     path?.let { openFileExplorer(it) }
                 } else {
+                    onSuccess.invoke(null)
                     showDialog = false
                 }
             },

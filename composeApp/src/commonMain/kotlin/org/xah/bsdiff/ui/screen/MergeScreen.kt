@@ -81,7 +81,9 @@ fun MergeScreen() {
             }
         }
     }
-    DoLoadingUI(newFilePath,loading,isSuccess)
+    DoLoadingUI(newFilePath,loading,isSuccess) {
+        isSuccess = null
+    }
 }
 
 

@@ -1,0 +1,3 @@
+D:/Android-Studio-Project/KMP/BsdiffApp/Bsdiff/cmake-build-debug/CMakeFiles/bsdiff_win_master.dir
+D:/Android-Studio-Project/KMP/BsdiffApp/Bsdiff/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/Android-Studio-Project/KMP/BsdiffApp/Bsdiff/cmake-build-debug/CMakeFiles/rebuild_cache.dir

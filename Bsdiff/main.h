@@ -5,8 +5,11 @@
 #ifndef BSDIFF_WIN_MASTER_MAIN_H
 #define BSDIFF_WIN_MASTER_MAIN_H
 
+#include <stdbool.h>
+
 int patch(const char *oldFile, const char *newFile, const char *patchFile);
 int merge(const char *oldFile, const char *patchFile, const char *newFile);
 __declspec(dllexport) const char* pick_file();
+bool warn();
 
 #endif //BSDIFF_WIN_MASTER_MAIN_H
