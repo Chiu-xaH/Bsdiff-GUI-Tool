@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.xah.bsdiff.logic.util.createPatch
 import org.xah.bsdiff.logic.util.openFileExplorer
@@ -72,10 +73,12 @@ fun SplitScreen() {
                         Button(
                             onClick = {
                                 cor.launch {
-                                    // 开始生成补丁包
-                                    isSuccess = createPatch(oldFilePath!!, newFilePath!!, applyPath(patchFilePath, patchFileName)) { load ->
-                                        loading = load
-                                    }
+                                    async { loading = true }.await()
+                                    async {
+                                        // 开始生成补丁包
+                                        isSuccess = createPatch(oldFilePath!!, newFilePath!!, applyPath(patchFilePath, patchFileName))
+                                    }.await()
+                                    launch { loading = false }
                                 }
                             },
                             enabled = canStartPatch(newFilePath,oldFilePath),
@@ -92,47 +95,6 @@ fun SplitScreen() {
         isSuccess = null
     }
 }
-
-@Composable
-fun DoLoadingUI(path : String?, loading : Boolean, isSuccess : Boolean?, isCheck : Boolean = false,onSuccess : (Boolean?) -> Unit) {
-    if(loading) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        }
-    }
-
-    var showDialog by remember { mutableStateOf(false) }
-
-    if(isSuccess != null) {
-        sendNotice("任务完成")
-        showDialog = true
-    }
-
-    // 结束后弹窗 并调用onLoading回调关闭加载
-    if(showDialog) {
-        MyDialog(
-            onConfirmation = {
-                onSuccess.invoke(null)
-                showDialog = false
-                             },
-            onDismissRequest = {
-                if(isSuccess == true && !isCheck) {
-                    path?.let { openFileExplorer(it) }
-                } else {
-                    onSuccess.invoke(null)
-                    showDialog = false
-                }
-            },
-            dialogText = if(isCheck) {
-                if(isSuccess == true)"校验为同一文件" else "非同一文件"
-            } else {
-                if(isSuccess == true)"生成成功" else "生成失败"
-            },
-            dismissText = if(isSuccess == true && !isCheck) "打开文件夹" else "好",
-        )
-    }
-}
-
 
 fun canStartPatch(path1 : String?, path2: String?) : Boolean {
     // 未选择文件

@@ -8,6 +8,8 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import org.xah.bsdiff.ui.App
 
+const val WINDOW_NAME = "增量更新工具"
+
 fun main() = application {
     // 创建初始的 WindowState
     val windowState = rememberWindowState(
@@ -18,7 +20,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
-        title = "增量更新工具",
+        title = WINDOW_NAME,
     ) {
         App()
     }

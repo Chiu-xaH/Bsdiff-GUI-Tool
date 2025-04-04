@@ -10,35 +10,23 @@ actual suspend fun createPatch(
     oldFilePath: String,
     newFilePath: String,
     patchFilePath: String,
-    callback: (Boolean) -> Unit
-)  : Boolean {
-    // 加载
-    callback(true)
-    // 启动一个协程进行修补操作
-    val result = withContext(Dispatchers.IO) {
+)  : Boolean  {
+    return withContext(Dispatchers.IO) {
         val jni = BsdiffJNI()
+        // 调用 JNI 函数并返回结果
         jni.patch(oldFilePath, newFilePath, patchFilePath)
     }
-
-    // 调用回调函数
-    callback(false)
-    return result == 0
 }
 
 actual suspend fun mergePatch(
     oldFilePath: String,
     patchFilePath: String,
     newFilePath: String,
-    callback: (Boolean) -> Unit
 ): Boolean {
-    // 加载
-    callback(true)
-    // 启动一个协程进行修补操作
-    val result = withContext(Dispatchers.IO) {
+    return withContext(Dispatchers.IO) {
         val jni = BsdiffJNI()
         jni.merge(oldFilePath,patchFilePath, newFilePath)
     }
-    callback(false)
-    return result == 1
 }
+
 

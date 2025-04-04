@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import bsdiffapp.composeapp.generated.resources.Res
 import bsdiffapp.composeapp.generated.resources.arrow_back
+import org.xah.bsdiff.logic.util.getVersionName
 import org.xah.bsdiff.ui.component.BottomTip
 import org.xah.bsdiff.ui.component.ResIcon
 import org.xah.bsdiff.ui.component.appHorizontalDp
@@ -50,7 +51,7 @@ fun App() {
                         title = {
                             Box(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "增量更新工具 1.0.3",
+                                    text = "增量更新工具 ${getVersionName()}",
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center,
                                     color = MaterialTheme.colorScheme.primary

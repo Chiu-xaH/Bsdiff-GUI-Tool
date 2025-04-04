@@ -2,48 +2,9 @@
 #include "../main.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <windows.h>
 #include "jni_native.h"
-
-//JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
-//  (JNIEnv *env, jobject obj, jstring oldFilePath, jstring newFilePath, jstring patchFilePath) {
-//
-//    // 将Java的jstring转换为C字符串
-//    const char* oldFile = (*env)->GetStringUTFChars(env, oldFilePath, NULL);
-//    const char* newFile = (*env)->GetStringUTFChars(env, newFilePath, NULL);
-//    const char* patchFile = (*env)->GetStringUTFChars(env, patchFilePath, NULL);
-//
-//
-//    int result = patch(oldFile,newFile,patchFile);
-//
-// // 释放资源
-//    (*env)->ReleaseStringUTFChars(env, oldFilePath, oldFile);
-//    (*env)->ReleaseStringUTFChars(env, newFilePath, newFile);
-//    (*env)->ReleaseStringUTFChars(env, patchFilePath, patchFile);
-//
-//    return result;
-//}
-//
-//
-//JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
-//  (JNIEnv *env, jobject obj, jstring oldFilePath, jstring patchFilePath, jstring newFilePath) {
-//
-//    // 将Java的jstring转换为C字符串
-//    const char* oldFile = (*env)->GetStringUTFChars(env, oldFilePath, NULL);
-//    const char* newFile = (*env)->GetStringUTFChars(env, newFilePath, NULL);
-//    const char* patchFile = (*env)->GetStringUTFChars(env, patchFilePath, NULL);
-//
-//    int result = merge(oldFile,patchFile,newFile);
-//
-//
-//    // 释放资源
-//    (*env)->ReleaseStringUTFChars(env, oldFilePath, oldFile);
-//    (*env)->ReleaseStringUTFChars(env, newFilePath, newFile);
-//    (*env)->ReleaseStringUTFChars(env, patchFilePath, patchFile);
-//
-//
-//    return result;
-//}
-
 
 JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
   (JNIEnv * env, jobject obj) {
@@ -59,18 +20,28 @@ JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
     return (*env)->NewStringUTF(env, filePath);
 }
 
-
 JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_warn
-  (JNIEnv * env, jobject obj) {
-    return warn() ? JNI_TRUE : JNI_FALSE;
+  (JNIEnv *env, jobject obj, jstring windowName) {
+
+    const jchar* windowNameChars = (*env)->GetStringChars(env, windowName, NULL);
+    jsize length = (*env)->GetStringLength(env, windowName);
+    wchar_t* windowNameW = (wchar_t*)malloc((length + 1) * sizeof(wchar_t)); // 为宽字符数组分配空间
+
+    wcsncpy(windowNameW, (const wchar_t*)windowNameChars, length);
+    windowNameW[length] = L'\0';  // 确保以 NULL 结尾
+
+    bool result = warn(windowNameW);
+
+    (*env)->ReleaseStringChars(env, windowName, windowNameChars);
+    free(windowNameW);
+
+    return result ? JNI_TRUE : JNI_FALSE;
 }
 
-
 #ifdef _WIN32
-#include <windows.h>
 #endif
 
-JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
+JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
   (JNIEnv *env, jobject obj, jstring oldFilePath, jstring patchFilePath, jstring newFilePath) {
 
     // Windows 平台需要先获取 UTF-16 编码
@@ -112,7 +83,7 @@ JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
 #endif
 
     // 调用合并函数
-    int result = merge(oldFile, patchFile, newFile);
+    bool result = merge(oldFile, patchFile, newFile);
 
 #ifdef _WIN32
     free(oldFile);
@@ -124,16 +95,14 @@ JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
     (*env)->ReleaseStringUTFChars(env, newFilePath, newFile);
     (*env)->ReleaseStringUTFChars(env, patchFilePath, patchFile);
 #endif
-
-    return result;
+    return result ? JNI_TRUE : JNI_FALSE;
 }
 
 
 #ifdef _WIN32
-#include <windows.h>
 #endif
 
-JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
+JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
         (JNIEnv *env, jobject obj, jstring oldFilePath, jstring newFilePath, jstring patchFilePath) {
 
 #ifdef _WIN32
@@ -175,7 +144,7 @@ JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
 #endif
 
     // 调用补丁函数
-    int result = patch(oldFile, newFile, patchFile);
+    bool result = patch(oldFile, newFile, patchFile);
 
 #ifdef _WIN32
     free(oldFile);
@@ -187,6 +156,5 @@ JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
     (*env)->ReleaseStringUTFChars(env, newFilePath, newFile);
     (*env)->ReleaseStringUTFChars(env, patchFilePath, patchFile);
 #endif
-
-    return result;
+    return result ? JNI_TRUE : JNI_FALSE;
 }

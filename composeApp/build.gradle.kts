@@ -11,7 +11,6 @@ plugins {
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -49,11 +48,8 @@ kotlin {
 
             implementation(compose.material3)
             implementation(libs.navigation.compose)
-//            implementation(libs.okio)
         }
         desktopMain.dependencies {
-//            implementation(libs.jna)
-
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
         }
@@ -68,8 +64,8 @@ android {
         applicationId = "org.xah.bsdiff"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 3
-        versionName = "1.0.3"
+        versionCode = 4
+        versionName = "1.0.4"
     }
     packaging {
         resources {
@@ -98,7 +94,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Bsdiff Tool"
-            packageVersion = "1.0.3"
+            packageVersion = "1.0.4"
         }
     }
 }

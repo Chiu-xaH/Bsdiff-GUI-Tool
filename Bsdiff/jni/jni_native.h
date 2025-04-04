@@ -12,17 +12,17 @@ extern "C" {
  * Method:    patch
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
+JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_patch
   (JNIEnv *, jobject, jstring, jstring, jstring);
 
-JNIEXPORT int JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
+JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
   (JNIEnv *env, jobject obj, jstring oldFilePath, jstring patchFilePath, jstring newFilePath);
 
 JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
   (JNIEnv * env, jobject obj);
 
 JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_warn
-  (JNIEnv * env, jobject obj);
+  (JNIEnv * env, jobject obj, jstring windowName);
 
 #ifdef __cplusplus
 }

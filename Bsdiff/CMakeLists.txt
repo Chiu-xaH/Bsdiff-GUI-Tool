@@ -21,8 +21,8 @@ add_library(bsdiff_win_master SHARED
         main.c
         main.h
         jni/jni-bsdiff.c
-        pick_file.c
-        warn.c
+        windows/pick_file.c
+        windows/warn.c
 )
 
 # 设置库的输出文件名

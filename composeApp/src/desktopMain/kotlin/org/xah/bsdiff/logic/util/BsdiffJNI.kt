@@ -7,11 +7,11 @@ class BsdiffJNI {
         }
     }
 
-    external fun patch(oldFilePath: String, newFilePath: String, patchFilePath: String) : Int
+    external fun patch(oldFilePath: String, newFilePath: String, patchFilePath: String) : Boolean
 
-    external fun merge(oldFilePath: String, patchFilePath: String, newFilePath: String) : Int
+    external fun merge(oldFilePath: String, patchFilePath: String, newFilePath: String) : Boolean
 
     external fun pickFile() : String?
 
-    external fun warn() : Boolean
+    external fun warn(windowName : String) : Boolean
 }

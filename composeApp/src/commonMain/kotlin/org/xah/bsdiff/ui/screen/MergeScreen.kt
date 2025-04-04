@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.xah.bsdiff.logic.util.mergePatch
 import org.xah.bsdiff.logic.util.pickFile
@@ -65,10 +66,12 @@ fun MergeScreen() {
                         Button(
                             onClick = {
                                 cor.launch {
-                                    // 开始生成补丁包
-                                    isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName)) { load ->
-                                        loading = load
-                                    }
+                                    async { loading = true }.await()
+                                    async {
+                                        // 开始生成补丁包
+                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName))
+                                    }.await()
+                                    launch { loading = false }
                                 }
                             },
                             enabled = canStartMerge(patchFilePath,oldFilePath),

@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "../main.h"
 
 #define MIN(x,y) (((x)<(y)) ? (x) : (y))
@@ -420,9 +421,10 @@ int main_diff(int argc, char *argv[])
 	return 0;
 }
 // 返回0 为成功
-int patch(const char *oldFile, const char *newFile, const char *patchFile) {
+bool patch(const char *oldFile, const char *newFile, const char *patchFile) {
     char *bsdiff = "bsdiff";
     char* argv[] = { bsdiff,(char*)oldFile, (char*)newFile, (char*)patchFile };
     int result = main_diff(4, argv);
-    return result;
+    return result == 0;
 }
+

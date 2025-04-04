@@ -31,17 +31,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include "../main.h"
-
-#define errx err
-void err(int exitcode, const char * fmt, ...)
-{
-	va_list valist;
-	va_start(valist, fmt);
-	vprintf(fmt, valist);
-	va_end(valist);
-	exit(exitcode);
-}
 
 static long offtin(unsigned char *buf)
 {
@@ -76,11 +67,11 @@ int main_patch(int argc, char * argv[])
 	long lenread;
 	long i;
 
-	if (argc != 4) errx(1, "usage: %s oldfile newfile patchfile\n", argv[0]);
+	if (argc != 4) return -1;
 
 	/* Open patch file */
 	if ((f = fopen(argv[3], "rb")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+		return -2;
 
 	/*
 	File format:
@@ -99,58 +90,55 @@ int main_patch(int argc, char * argv[])
 	/* Read header */
 	if (fread(header, 1, 32, f) < 32) {
 		if (feof(f))
-			errx(1, "Corrupt patch\n");
-		err(1, "fread(%s)", argv[3]);
+			return -3;
+		return -4;
 	}
 
 	/* Check for appropriate magic */
 	if (memcmp(header, "BSDIFF40", 8) != 0)
-		errx(1, "Corrupt patch\n");
+		return -5;
 
 	/* Read lengths from header */
 	bzctrllen = offtin(header + 8);
 	bzdatalen = offtin(header + 16);
 	newsize = offtin(header + 24);
 	if ((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0))
-		errx(1, "Corrupt patch\n");
+		return -6;
 
 	/* Close patch file and re-open it via libbzip2 at the right places */
 	if (fclose(f))
-		err(1, "fclose(%s)", argv[3]);
+		return -7;
 	if ((cpf = fopen(argv[3], "rb")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+		return -7;
 	if (fseek(cpf, 32, SEEK_SET))
-		err(1, "fseeko(%s, %lld)", argv[3],
-		(long long)32);
+		return -7;
 	if ((cpfbz2 = BZ2_bzReadOpen(&cbz2err, cpf, 0, 0, NULL, 0)) == NULL)
-		errx(1, "BZ2_bzReadOpen, bz2err = %d", cbz2err);
+		return -7;
 	if ((dpf = fopen(argv[3], "rb")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+		return -7;
 	if (fseek(dpf, 32 + bzctrllen, SEEK_SET))
-		err(1, "fseeko(%s, %lld)", argv[3],
-		(long long)(32 + bzctrllen));
+		return -7;
 	if ((dpfbz2 = BZ2_bzReadOpen(&dbz2err, dpf, 0, 0, NULL, 0)) == NULL)
-		errx(1, "BZ2_bzReadOpen, bz2err = %d", dbz2err);
+		return -7;
 	if ((epf = fopen(argv[3], "rb")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+		return -7;
 	if (fseek(epf, 32 + bzctrllen + bzdatalen, SEEK_SET))
-		err(1, "fseeko(%s, %lld)", argv[3],
-		(long long)(32 + bzctrllen + bzdatalen));
+		return -7;
 	if ((epfbz2 = BZ2_bzReadOpen(&ebz2err, epf, 0, 0, NULL, 0)) == NULL)
-		errx(1, "BZ2_bzReadOpen, bz2err = %d", ebz2err);
+		return -7;
 
 	fs = fopen(argv[1], "rb");
-	if (fs == NULL)err(1, "Open failed :%s", argv[1]);
-	if (fseek(fs, 0, SEEK_END) != 0)err(1, "Seek failed :%s", argv[1]);
+	if (fs == NULL) return -8;
+	if (fseek(fs, 0, SEEK_END) != 0) return -9;
 	oldsize = ftell(fs);
 	pold = (unsigned char *)malloc(oldsize + 1);
-	if (pold == NULL)	err(1, "Malloc failed :%s", argv[1]);
+	if (pold == NULL)	return -10;
 	fseek(fs, 0, SEEK_SET);
-	if (fread(pold, 1, oldsize, fs) == -1)	err(1, "Read failed :%s", argv[1]);
-	if (fclose(fs) == -1)	err(1, "Close failed :%s", argv[1]);
+	if (fread(pold, 1, oldsize, fs) == -1)	return -10;
+	if (fclose(fs) == -1)	return -11;
 
 	pnew = malloc(newsize + 1);
-	if (pnew == NULL)err(1, NULL);
+	if (pnew == NULL) return -12;
 
 	oldpos = 0;newpos = 0;
 	while (newpos < newsize) {
@@ -159,19 +147,19 @@ int main_patch(int argc, char * argv[])
 			lenread = BZ2_bzRead(&cbz2err, cpfbz2, buf, 8);
 			if ((lenread < 8) || ((cbz2err != BZ_OK) &&
 				(cbz2err != BZ_STREAM_END)))
-				errx(1, "Corrupt patch\n");
+				return -13;
 			ctrl[i] = offtin(buf);
 		};
 
 		/* Sanity-check */
 		if (newpos + ctrl[0] > newsize)
-			errx(1, "Corrupt patch\n");
+			return -13;
 
 		/* Read diff string */
 		lenread = BZ2_bzRead(&dbz2err, dpfbz2, pnew + newpos, ctrl[0]);
 		if ((lenread < ctrl[0]) ||
 			((dbz2err != BZ_OK) && (dbz2err != BZ_STREAM_END)))
-			errx(1, "Corrupt patch\n");
+			return -13;
 
 		/* Add pold data to diff string */
 		for (i = 0;i < ctrl[0];i++)
@@ -184,13 +172,13 @@ int main_patch(int argc, char * argv[])
 
 		/* Sanity-check */
 		if (newpos + ctrl[1] > newsize)
-			errx(1, "Corrupt patch\n");
+			return -13;
 
 		/* Read extra string */
 		lenread = BZ2_bzRead(&ebz2err, epfbz2, pnew + newpos, ctrl[1]);
 		if ((lenread < ctrl[1]) ||
 			((ebz2err != BZ_OK) && (ebz2err != BZ_STREAM_END)))
-			errx(1, "Corrupt patch\n");
+			return -13;
 
 		/* Adjust pointers */
 		newpos += ctrl[1];
@@ -202,23 +190,23 @@ int main_patch(int argc, char * argv[])
 	BZ2_bzReadClose(&dbz2err, dpfbz2);
 	BZ2_bzReadClose(&ebz2err, epfbz2);
 	if (fclose(cpf) || fclose(dpf) || fclose(epf))
-		err(1, "fclose(%s)", argv[3]);
+		return -14;
 
 	/* Write the pnew file */
 	fs = fopen(argv[2], "wb");
-	if (fs == NULL)err(1, "Create failed :%s", argv[2]);
-	if (fwrite(pnew, 1, newsize, fs) == -1)err(1, "Write failed :%s", argv[2]);
-	if (fclose(fs) == -1)err(1, "Close failed :%s", argv[2]);
+	if (fs == NULL) return -15;
+	if (fwrite(pnew, 1, newsize, fs) == -1) return -15;
+	if (fclose(fs) == -1) return -15;
 
 	free(pnew);
 	free(pold);
-
+    return 0;
 }
 
 // 返回1 为成功
-int merge(const char *oldFile, const char *patchFile, const char *newFile) {
+bool merge(const char *oldFile, const char *patchFile, const char *newFile) {
     char *bspatch = "bspatch";
     char* argv[] = { bspatch,(char*)oldFile, (char*)newFile, (char*)patchFile };
     int result = main_patch(4, argv);
-    return result;
+    return result == 0;
 }

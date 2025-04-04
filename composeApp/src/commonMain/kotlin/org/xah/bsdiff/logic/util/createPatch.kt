@@ -4,13 +4,12 @@ package org.xah.bsdiff.logic.util
 expect suspend fun createPatch(
     oldFilePath: String,
     newFilePath: String,
-    patchFilePath: String,
-    callback: (Boolean) -> Unit) : Boolean
+    patchFilePath: String
+) : Boolean
 
 
 expect suspend fun mergePatch(
     oldFilePath: String,
     patchFilePath: String,
-    newFilePath: String,
-    callback: (Boolean) -> Unit
+    newFilePath: String
 ) : Boolean
