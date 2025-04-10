@@ -32,11 +32,11 @@ fun DoLoadingUI(path : String?, loading : Boolean, isSuccess : Boolean?, isCheck
     // 结束后弹窗 并调用onLoading回调关闭加载
     if(showDialog) {
         MyDialog(
-            onConfirmation = {
+            onDismissRequest = {
                 onSuccess.invoke(null)
                 showDialog = false
             },
-            onDismissRequest = {
+            onConfirmation = {
                 if(isSuccess == true && !isCheck) {
                     path?.let { openFileExplorer(it) }
                 } else {
@@ -49,7 +49,7 @@ fun DoLoadingUI(path : String?, loading : Boolean, isSuccess : Boolean?, isCheck
             } else {
                 if(isSuccess == true)"生成成功" else "生成失败"
             },
-            dismissText = if(isSuccess == true && !isCheck) "打开文件夹" else "好",
+            conformText = if(isSuccess == true && !isCheck) "打开文件夹" else "好",
         )
     }
 }

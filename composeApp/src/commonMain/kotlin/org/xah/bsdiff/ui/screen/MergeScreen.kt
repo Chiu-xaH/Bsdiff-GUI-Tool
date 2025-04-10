@@ -14,9 +14,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.xah.bsdiff.logic.util.mergePatch
+import org.xah.bsdiff.logic.util.openFileExplorer
 import org.xah.bsdiff.logic.util.pickFile
 import org.xah.bsdiff.ui.component.StyleCardListItem
 import org.xah.bsdiff.ui.component.TransplantListItem
@@ -60,7 +62,7 @@ fun MergeScreen() {
             if(newFilePath.isNotEmpty() && patchFilePath != null && oldFilePath != null) {
                 val newFileName = oldFileName + "_merged." + getFileExtension(oldFileName)
                 StyleCardListItem(
-                    headlineContent = { Text(newFilePath) },
+                    headlineContent = { newFilePath.let{ Text(it, textDecoration = TextDecoration.Underline, modifier = Modifier.clickable { openFileExplorer(it) }) }},
                     supportingContent = { Text("生成${newFileName}到目录") },
                     trailingContent = {
                         Button(

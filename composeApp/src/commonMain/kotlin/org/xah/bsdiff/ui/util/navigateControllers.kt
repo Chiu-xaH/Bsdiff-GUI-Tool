@@ -1,6 +1,8 @@
 package org.xah.bsdiff.ui.util
 
+import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 fun NavController.navigateAndClear(route: String) {
     navigate(route) {
@@ -19,4 +21,5 @@ fun NavController.navigateAndSave(route: String) {
     }
 }
 
-fun NavController.isCurrentRoute(route : String) : Boolean = this.currentBackStackEntry?.destination?.route == route
+@Composable
+fun NavController.isCurrentRoute(route: String) : Boolean = this.currentBackStackEntryAsState().value?.destination?.route != route

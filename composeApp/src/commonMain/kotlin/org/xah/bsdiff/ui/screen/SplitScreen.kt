@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.xah.bsdiff.logic.util.createPatch
@@ -67,7 +68,7 @@ fun SplitScreen() {
             if(patchFilePath.isNotEmpty() && oldFilePath != null && newFilePath != null) {
                 val patchFileName = getPatchFileName(newFileName, oldFileName)
                 StyleCardListItem(
-                    headlineContent = { Text(patchFilePath) },
+                    headlineContent = { patchFilePath.let{ Text(it, textDecoration = TextDecoration.Underline, modifier = Modifier.clickable { openFileExplorer(it) }) }},
                     supportingContent = { Text("生成${patchFileName}到目录") },
                     trailingContent = {
                         Button(

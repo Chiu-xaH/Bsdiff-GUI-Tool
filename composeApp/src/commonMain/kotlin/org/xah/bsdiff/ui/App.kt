@@ -61,7 +61,7 @@ fun App() {
                         colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color.Transparent),
                         actions = {
                             // 如果已经在首页，则不显示
-                            if (!navHostController.isCurrentRoute(NavRoute.HOME.name)) {
+                            if (navHostController.isCurrentRoute(NavRoute.HOME.name)) {
                                 IconButton(
                                     onClick = {
                                         navHostController.navigateAndClear(NavRoute.HOME.name) // 回到上一级
