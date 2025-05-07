@@ -13,5 +13,7 @@ class BsdiffJNI {
 
     external fun pickFile() : String?
 
+//    external fun pickFiles() : String?
+
     external fun warn(windowName : String) : Boolean
 }

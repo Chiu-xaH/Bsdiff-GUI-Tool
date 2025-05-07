@@ -6,6 +6,21 @@
 #include <windows.h>
 #include "jni_native.h"
 
+JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFiles
+  (JNIEnv * env, jobject obj) {
+    // 调用C函数 pick_file
+    const char* filePath = pick_files();
+
+    // 如果没有文件被选择，返回null
+    if (filePath == NULL) {
+        return NULL;
+    }
+
+    // 将C的const char* 转换为jstring并返回
+    return (*env)->NewStringUTF(env, filePath);
+}
+
+
 JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
   (JNIEnv * env, jobject obj) {
     // 调用C函数 pick_file

@@ -3,6 +3,7 @@ package org.xah.bsdiff.logic.util
 import java.awt.Desktop
 import java.io.File
 import java.io.IOException
+//actual suspend fun pickFiles(): String? = BsdiffJNI().pickFiles()
 
 
 actual suspend fun pickFile(): String? = BsdiffJNI().pickFile()

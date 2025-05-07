@@ -1,3 +1,3 @@
 package org.xah.bsdiff.logic.util
 
-fun getVersionName() : String = "1.0.5"
+fun getVersionName() : String = "1.0.6"

@@ -14,7 +14,7 @@ fun main() = application {
     // 创建初始的 WindowState
     val windowState = rememberWindowState(
         width = 580.dp,
-        height = 420.dp,
+        height = 440.dp,
         position = WindowPosition(Alignment.Center) // 设置居中位置
     )
     Window(

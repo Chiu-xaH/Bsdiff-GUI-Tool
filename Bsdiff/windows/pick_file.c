@@ -58,3 +58,92 @@ __declspec(dllexport) const char* pick_file() {
         return NULL;
     }
 }
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+__declspec(dllexport) const char* pick_files() {
+    static char file_buffer[8192] = {0}; // 多选时需要较大的缓冲区
+    static char* utf8_result = NULL;
+
+    OPENFILENAME ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = file_buffer;
+    ofn.lpstrFile[0] = '\0';
+    ofn.nMaxFile = sizeof(file_buffer);
+    ofn.lpstrFilter = "All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.lpstrTitle = "Select Files";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
+
+    if (GetOpenFileName(&ofn) == TRUE) {
+        // 清理之前的缓存
+        if (utf8_result != NULL) {
+            free(utf8_result);
+            utf8_result = NULL;
+        }
+
+        char* p = file_buffer;
+        char* dir = p;
+        p += strlen(dir) + 1;
+
+        if (*p == '\0') {
+            // 只选择了一个文件
+            dir = file_buffer;
+            int wchars_num = MultiByteToWideChar(CP_ACP, 0, dir, -1, NULL, 0);
+            wchar_t* wstr = (wchar_t*)malloc(wchars_num * sizeof(wchar_t));
+            MultiByteToWideChar(CP_ACP, 0, dir, -1, wstr, wchars_num);
+
+            int utf8_num = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+            utf8_result = (char*)malloc(utf8_num);
+            WideCharToMultiByte(CP_UTF8, 0, wstr, -1, utf8_result, utf8_num, NULL, NULL);
+            free(wstr);
+
+            return utf8_result;
+        } else {
+            // 多个文件，目录 + 多个文件名
+            size_t total_len = 0;
+            size_t count = 0;
+            char* filenames[512]; // 最多支持512个文件
+
+            while (*p) {
+                filenames[count++] = p;
+                total_len += strlen(dir) + 1 + strlen(p) + 1; // 路径 + `\` + 文件名 + `\n`
+                p += strlen(p) + 1;
+            }
+
+            utf8_result = (char*)malloc(total_len * 4 + 1); // UTF-8更大一些
+            if (!utf8_result) return NULL;
+            utf8_result[0] = '\0';
+
+            for (size_t i = 0; i < count; ++i) {
+                char full_path[MAX_PATH];
+                snprintf(full_path, sizeof(full_path), "%s\\%s", dir, filenames[i]);
+
+                int wchars_num = MultiByteToWideChar(CP_ACP, 0, full_path, -1, NULL, 0);
+                wchar_t* wstr = (wchar_t*)malloc(wchars_num * sizeof(wchar_t));
+                MultiByteToWideChar(CP_ACP, 0, full_path, -1, wstr, wchars_num);
+
+                int utf8_num = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+                char* utf8_tmp = (char*)malloc(utf8_num);
+                WideCharToMultiByte(CP_UTF8, 0, wstr, -1, utf8_tmp, utf8_num, NULL, NULL);
+
+                strcat(utf8_result, utf8_tmp);
+                strcat(utf8_result, "\n");
+
+                free(wstr);
+                free(utf8_tmp);
+            }
+
+            return utf8_result;
+        }
+    }
+
+    return NULL;
+}

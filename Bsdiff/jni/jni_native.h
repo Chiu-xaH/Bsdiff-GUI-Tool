@@ -21,6 +21,9 @@ JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_merge
 JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFile
   (JNIEnv * env, jobject obj);
 
+JNIEXPORT jstring JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_pickFiles
+  (JNIEnv * env, jobject obj);
+
 JNIEXPORT jboolean JNICALL Java_org_xah_bsdiff_logic_util_BsdiffJNI_warn
   (JNIEnv * env, jobject obj, jstring windowName);
 
