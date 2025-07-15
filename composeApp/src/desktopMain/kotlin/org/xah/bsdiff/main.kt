@@ -6,7 +6,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import org.xah.bsdiff.ui.App
+import org.xah.bsdiff.ui.screen.App
 
 const val WINDOW_NAME = "增量更新工具"
 

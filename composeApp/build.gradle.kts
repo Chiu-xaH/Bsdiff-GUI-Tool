@@ -64,8 +64,8 @@ android {
         applicationId = "org.xah.bsdiff"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 6
-        versionName = "1.0.6"
+        versionCode = 7
+        versionName = "1.1"
     }
     packaging {
         resources {
@@ -94,7 +94,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Bsdiff Tool"
-            packageVersion = "1.0.6"
+            packageVersion = "1.1.0"
         }
     }
 }

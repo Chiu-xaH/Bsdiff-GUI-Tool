@@ -1,5 +1,13 @@
 package org.xah.bsdiff.logic.util
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.draganddrop.DragAndDropEvent
+import androidx.compose.ui.draganddrop.DragAndDropTarget
+import androidx.compose.ui.draganddrop.DragData
+import androidx.compose.ui.draganddrop.awtTransferable
+import androidx.compose.ui.draganddrop.dragData
 import java.awt.Desktop
 import java.io.File
 import java.io.IOException
@@ -27,3 +35,5 @@ actual fun openFileExplorer(path : String) {
         println("不支持桌面操作！")
     }
 }
+
+

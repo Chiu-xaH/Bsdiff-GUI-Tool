@@ -1,4 +1,4 @@
-package org.xah.bsdiff.ui.screen
+package org.xah.bsdiff.ui.screen.sub
 
 import java.io.File
 import java.security.MessageDigest

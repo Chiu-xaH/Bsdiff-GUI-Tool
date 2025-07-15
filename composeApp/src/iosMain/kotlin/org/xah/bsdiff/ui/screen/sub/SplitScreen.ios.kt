@@ -1,4 +1,4 @@
-package org.xah.bsdiff.ui.screen
+package org.xah.bsdiff.ui.screen.sub
 
 actual fun getDefaultPath(path: String): String {
     TODO("Not yet implemented")
@@ -6,14 +6,6 @@ actual fun getDefaultPath(path: String): String {
 
 actual fun getFileName(path: String): String {
     TODO("Not yet implemented")
-}
-
-actual fun createPatch(
-    oldFilePath: String,
-    newFilePath: String,
-    patchFilePath: String
-) : Boolean {
-    return false
 }
 
 actual fun applyPath(path: String, file: String): String {

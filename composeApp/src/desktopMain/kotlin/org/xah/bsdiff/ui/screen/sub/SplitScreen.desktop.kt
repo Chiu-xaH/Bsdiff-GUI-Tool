@@ -1,6 +1,7 @@
-package org.xah.bsdiff.ui.screen
+package org.xah.bsdiff.ui.screen.sub
 
 import java.io.File
+
 
 actual fun getDefaultPath(path: String): String {
     val file = File(path)

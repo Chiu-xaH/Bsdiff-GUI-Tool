@@ -1,4 +1,4 @@
-package org.xah.bsdiff.ui.screen
+package org.xah.bsdiff.ui.screen.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

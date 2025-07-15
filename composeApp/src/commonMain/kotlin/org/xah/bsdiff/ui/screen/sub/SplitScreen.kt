@@ -1,4 +1,4 @@
-package org.xah.bsdiff.ui.screen
+package org.xah.bsdiff.ui.screen.sub
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -6,16 +6,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -34,11 +29,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import bsdiffapp.composeapp.generated.resources.Res
-import bsdiffapp.composeapp.generated.resources.add
-import bsdiffapp.composeapp.generated.resources.arrow_back
 import bsdiffapp.composeapp.generated.resources.delete
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import org.xah.bsdiff.logic.util.addIfNotExists
 import org.xah.bsdiff.logic.util.createPatch
 import org.xah.bsdiff.logic.util.openFileExplorer
 import org.xah.bsdiff.logic.util.pickFile
@@ -46,15 +40,15 @@ import org.xah.bsdiff.ui.component.ResIcon
 import org.xah.bsdiff.ui.component.RowCenter
 import org.xah.bsdiff.ui.component.StyleCardListItem
 import org.xah.bsdiff.ui.component.TransplantListItem
-import org.xah.bsdiff.ui.util.NavRoute
-import org.xah.bsdiff.ui.util.navigateAndClear
+import org.xah.bsdiff.ui.screen.DoLoadingUI
+import org.xah.bsdiff.ui.util.DropUI
+import org.xah.bsdiff.ui.util.DropsUI
+
 
 @Composable
 fun SplitScreen() {
-//    var oldFilePath by remember { mutableStateOf<String?>(null) }
     var newFilePath by remember { mutableStateOf<String?>(null) }
     var patchFilePath by remember { mutableStateOf("") }
-//    var oldFileName by remember { mutableStateOf("") }
     var newFileName by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf<Boolean?>(null) }
@@ -62,92 +56,101 @@ fun SplitScreen() {
     var failCount by remember { mutableStateOf<Int>(0) }
 
     val scope = rememberCoroutineScope()
-//    var oldFileName = remember { mutableStateListOf<String>() }
     val oldFilePath = remember { mutableStateListOf<String>() }
 
     LaunchedEffect(newFilePath,oldFilePath) {
         isSuccess = null
         newFilePath?.let { patchFilePath = getDefaultPath(it) }
-//        oldFilePath[0].let { oldFileName = getFileName(it) }
         newFilePath?.let { newFileName = getFileName(it) }
     }
 
 
     if(!loading) {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            Row {
-                TransplantListItem(
-                    headlineContent = { Text("选择新文件") },
-                    supportingContent = newFilePath?.let { { Text(it) } },
-                    modifier = Modifier.weight(.5f).clickable {
-                        scope.launch { newFilePath = pickFile() }
-                    }
-                )
-                TransplantListItem(
-                    headlineContent = { Text("添加旧文件队列") },
-                    supportingContent = { Text(if(successCount + failCount == 0) "已添加 ${oldFilePath.size}" else "成功$successCount/失败$failCount/总${oldFilePath.size}") },
-                    modifier = Modifier.weight(.5f).clickable {
-                        scope.launch { pickFile()?.let { oldFilePath.add(it) } }
-                    }
-                )
+        Box {
+            Row(modifier = Modifier.padding(5.dp)) {
+                DropUI("新文件", modifier = Modifier.fillMaxSize().weight(.5f)) {
+                    newFilePath = it
+                }
+                Spacer(Modifier.width(5.dp))
+                DropsUI("旧文件", modifier = Modifier.fillMaxSize().weight(.5f),oldFilePath)
             }
-            if(patchFilePath.isNotEmpty() && oldFilePath.isNotEmpty() && newFilePath != null) {
-                StyleCardListItem(
-                    headlineContent = { patchFilePath.let{ Text(it, textDecoration = TextDecoration.Underline, modifier = Modifier.clickable { openFileExplorer(it) }) }},
-                    supportingContent = { Text("生成.patch文件到目录") },
-                    trailingContent = {
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    async { loading = true }.await()
-                                    async {
-                                        // 开始生成补丁包
-                                        for(i in oldFilePath) {
-                                            val patchFileName = getPatchFileName(newFileName, getFileName(i))
-                                            val result = createPatch(i, newFilePath!!, applyPath(patchFilePath, patchFileName))
-                                            if(result) {
-                                                successCount++
-                                            } else {
-                                                failCount++
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Row {
+                    TransplantListItem(
+                        headlineContent = { Text("选择或拖入新文件") },
+                        supportingContent = newFilePath?.let { { Text(it) } },
+                        modifier = Modifier.weight(.5f).clickable {
+                            scope.launch { newFilePath = pickFile() }
+                        }
+                    )
+                    TransplantListItem(
+                        headlineContent = { Text("添加或拖入若干旧文件") },
+                        supportingContent = { Text(if(successCount + failCount == 0) "已添加 ${oldFilePath.size}" else "成功$successCount/失败$failCount/总${oldFilePath.size}") },
+                        modifier = Modifier.weight(.5f).clickable {
+                            scope.launch { pickFile()?.let { oldFilePath.addIfNotExists(it) } }
+                        }
+                    )
+                }
+                if(patchFilePath.isNotEmpty() && oldFilePath.isNotEmpty() && newFilePath != null) {
+                    StyleCardListItem(
+                        headlineContent = { patchFilePath.let{ Text(it, textDecoration = TextDecoration.Underline, modifier = Modifier.clickable { openFileExplorer(it) }) }},
+                        supportingContent = { Text("生成.patch文件到目录") },
+                        trailingContent = {
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        async { loading = true }.await()
+                                        async {
+                                            // 开始生成补丁包
+                                            for(i in oldFilePath) {
+                                                val patchFileName = getPatchFileName(newFileName, getFileName(i))
+                                                val result = createPatch(i, newFilePath!!, applyPath(patchFilePath, patchFileName))
+                                                if(result) {
+                                                    successCount++
+                                                } else {
+                                                    failCount++
+                                                }
                                             }
-                                        }
-                                        isSuccess = true
-                                    }.await()
-                                    launch { loading = false }
-                                }
-                            },
-                            enabled = canStartPatches(newFilePath,oldFilePath),
-                            shape = MaterialTheme.shapes.medium,
-                        ) {
-                            Text("生成补丁包")
+                                            isSuccess = true
+                                        }.await()
+                                        launch { loading = false }
+                                    }
+                                },
+                                enabled = canStartPatches(newFilePath,oldFilePath),
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Text("生成补丁包")
+                            }
                         }
-                    }
-                )
-            }
-            for (index in oldFilePath.indices) {
-                TransplantListItem(
-                    headlineContent = oldFilePath[index].let { { Text(it) } },
-                    modifier = Modifier.clickable {
+                    )
+                }
+                for (index in oldFilePath.indices) {
+                    TransplantListItem(
+                        headlineContent = oldFilePath[index].let { { Text(it) } },
+                        modifier = Modifier.clickable {
 
-                    },
-                    leadingContent = { Text((index + 1).toString())},
-                    trailingContent = {
-                        IconButton(onClick = {
-                            oldFilePath.removeAt(index)
-                        }) {
-                            ResIcon(Res.drawable.delete)
+                        },
+                        leadingContent = { Text((index + 1).toString())},
+                        trailingContent = {
+                            IconButton(onClick = {
+                                oldFilePath.removeAt(index)
+                            }) {
+                                ResIcon(Res.drawable.delete)
+                            }
+                        }
+                    )
+                }
+                if(oldFilePath.isNotEmpty()) {
+                    RowCenter {
+                        Button (
+                            onClick = {
+                                scope.launch { pickFile()?.let { oldFilePath.addIfNotExists(it) } }
+                            },
+                            modifier = Modifier.padding(vertical = 5.dp)
+                        ) {
+                            Text("添加旧文件")
                         }
                     }
-                )
-            }
-            RowCenter {
-                FilledTonalButton (
-                    onClick = {
-                        scope.launch { pickFile()?.let { oldFilePath.add(it) } }
-                    },
-                    modifier = Modifier.padding(vertical = 5.dp)
-                ) {
-                    Text("选择旧文件")
                 }
             }
         }
@@ -165,7 +168,7 @@ fun SplitScreen() {
             }
         }
     }
-    DoLoadingUI(patchFilePath,loading,isSuccess) {
+    DoLoadingUI(patchFilePath, loading, isSuccess) {
         successCount = 0
         failCount = 0
         isSuccess = null

@@ -1,4 +1,4 @@
-package org.xah.bsdiff.ui
+package org.xah.bsdiff.ui.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,13 +26,11 @@ import androidx.navigation.compose.rememberNavController
 import bsdiffapp.composeapp.generated.resources.Res
 import bsdiffapp.composeapp.generated.resources.arrow_back
 import org.xah.bsdiff.logic.util.getVersionName
-import org.xah.bsdiff.ui.component.BottomTip
 import org.xah.bsdiff.ui.component.ResIcon
-import org.xah.bsdiff.ui.component.appHorizontalDp
-import org.xah.bsdiff.ui.screen.CheckScreen
-import org.xah.bsdiff.ui.screen.HomeScreen
-import org.xah.bsdiff.ui.screen.MergeScreen
-import org.xah.bsdiff.ui.screen.SplitScreen
+import org.xah.bsdiff.ui.screen.sub.CheckScreen
+import org.xah.bsdiff.ui.screen.main.HomeScreen
+import org.xah.bsdiff.ui.screen.sub.MergeScreen
+import org.xah.bsdiff.ui.screen.sub.SplitScreen
 import org.xah.bsdiff.ui.util.AnimationManager.fadeAnimation
 import org.xah.bsdiff.ui.util.NavRoute
 import org.xah.bsdiff.ui.util.isCurrentRoute
