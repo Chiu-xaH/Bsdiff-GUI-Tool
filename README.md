@@ -1,6 +1,6 @@
 # 增量更新工具
 
-![截图](/img/shot.jpg)
+![截图](/src/shot.jpg)
 
 一个简陋的GUI工具，调用了[Bsdiff](/Bsdiff)
 
