@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -30,12 +32,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import bsdiffapp.composeapp.generated.resources.Res
 import bsdiffapp.composeapp.generated.resources.delete
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.xah.bsdiff.logic.util.addIfNotExists
 import org.xah.bsdiff.logic.util.createPatch
 import org.xah.bsdiff.logic.util.openFileExplorer
 import org.xah.bsdiff.logic.util.pickFile
+import org.xah.bsdiff.ui.component.BottomTip
 import org.xah.bsdiff.ui.component.ResIcon
 import org.xah.bsdiff.ui.component.RowCenter
 import org.xah.bsdiff.ui.component.StyleCardListItem
@@ -99,21 +107,41 @@ fun SplitScreen() {
                             Button(
                                 onClick = {
                                     scope.launch {
-                                        async { loading = true }.await()
-                                        async {
-                                            // 开始生成补丁包
-                                            for(i in oldFilePath) {
-                                                val patchFileName = getPatchFileName(newFileName, getFileName(i))
-                                                val result = createPatch(i, newFilePath!!, applyPath(patchFilePath, patchFileName))
-                                                if(result) {
-                                                    successCount++
-                                                } else {
-                                                    failCount++
+                                        loading = true
+                                        val cpuCoreCount = getCpuCoreCount()
+                                        val semaphore = Semaphore(cpuCoreCount) // 控制最大并发数
+                                        val results = oldFilePath.map { oldPath ->
+                                            async(Dispatchers.IO) {
+                                                semaphore.withPermit {
+                                                    val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
+                                                    val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName))
+                                                    if(result) {
+                                                        successCount++
+                                                    } else {
+                                                        failCount++
+                                                    }
                                                 }
                                             }
-                                            isSuccess = true
-                                        }.await()
-                                        launch { loading = false }
+                                        }
+
+                                        // 等待所有任务完成
+                                        val finalResults = results.awaitAll()
+                                        isSuccess = true
+                                        loading = false
+//                                        async {
+//                                            // 开始生成补丁包
+//                                            for(i in oldFilePath) {
+//                                                val patchFileName = getPatchFileName(newFileName, getFileName(i))
+//                                                val result = createPatch(i, newFilePath!!, applyPath(patchFilePath, patchFileName))
+//                                                if(result) {
+//                                                    successCount++
+//                                                } else {
+//                                                    failCount++
+//                                                }
+//                                            }
+//                                            isSuccess = true
+//                                        }.await()
+//                                        launch { loading = false }
                                     }
                                 },
                                 enabled = canStartPatches(newFilePath,oldFilePath),
@@ -124,6 +152,7 @@ fun SplitScreen() {
                         }
                     )
                 }
+                BottomTip("${getCpuCoreCount()} Core Cpu")
                 for (index in oldFilePath.indices) {
                     TransplantListItem(
                         headlineContent = oldFilePath[index].let { { Text(it) } },
@@ -149,6 +178,15 @@ fun SplitScreen() {
                             modifier = Modifier.padding(vertical = 5.dp)
                         ) {
                             Text("添加旧文件")
+                        }
+                        Spacer(Modifier.width(15.dp))
+                        FilledTonalButton (
+                            onClick = {
+                                oldFilePath.sortDescending()
+                            },
+                            modifier = Modifier.padding(vertical = 5.dp)
+                        ) {
+                            Text("排序")
                         }
                     }
                 }
@@ -211,7 +249,7 @@ fun canStartPatch(path1 : String?, path2: String?) : Boolean {
 
 fun getPatchFileName(newFileName : String,oldFileName : String) : String {
     // 补丁名为 旧文件_patched_新文件.新文件的扩展名
-    val e = getFileExtension(newFileName)
+//    val e = getFileExtension(newFileName)
     val o = getFileNameWithoutExtension(oldFileName)
     val n = getFileNameWithoutExtension(newFileName)
     return o + "_to_" + n + "." + "patch"
@@ -227,3 +265,5 @@ fun getFileExtension(fileName: String): String = fileName.substringAfterLast("."
 fun getFileNameWithoutExtension(fileName: String): String = fileName.substringBeforeLast(".") // 去掉扩展名
 // 连接
 expect fun applyPath(path: String,file : String) : String
+
+expect fun getCpuCoreCount() : Int

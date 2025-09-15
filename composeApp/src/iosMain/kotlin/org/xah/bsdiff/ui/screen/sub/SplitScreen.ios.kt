@@ -11,3 +11,7 @@ actual fun getFileName(path: String): String {
 actual fun applyPath(path: String, file: String): String {
     TODO("Not yet implemented")
 }
+
+actual fun getCpuCoreCount(): Int {
+    TODO("Not yet implemented")
+}

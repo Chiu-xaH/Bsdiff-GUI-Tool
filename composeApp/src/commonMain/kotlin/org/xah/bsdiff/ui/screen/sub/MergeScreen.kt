@@ -21,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.xah.bsdiff.logic.util.mergePatch
 import org.xah.bsdiff.logic.util.openFileExplorer
@@ -40,7 +39,7 @@ fun MergeScreen() {
     var patchFileName by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf<Boolean?>(null) }
-    val cor = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(patchFilePath,oldFilePath) {
         isSuccess = null
@@ -66,14 +65,14 @@ fun MergeScreen() {
                         headlineContent = { Text("选择或拖入旧文件") },
                         supportingContent = oldFilePath?.let { { Text(it) } },
                         modifier = Modifier.weight(.5f).clickable {
-                            cor.launch { oldFilePath = pickFile() }
+                            scope.launch { oldFilePath = pickFile() }
                         }
                     )
                     TransplantListItem(
                         headlineContent = { Text("选择或拖入补丁文件(.patch)") },
                         supportingContent = patchFilePath?.let { { Text(it) } },
                         modifier = Modifier.weight(.5f).clickable {
-                            cor.launch { patchFilePath = pickFile() }
+                            scope.launch { patchFilePath = pickFile() }
                         }
                     )
                 }
@@ -85,13 +84,11 @@ fun MergeScreen() {
                         trailingContent = {
                             Button(
                                 onClick = {
-                                    cor.launch {
-                                        async { loading = true }.await()
-                                        async {
-                                            // 开始生成补丁包
-                                            isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName))
-                                        }.await()
-                                        launch { loading = false }
+                                    scope.launch {
+                                        loading = true
+                                        // 开始生成补丁包
+                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName))
+                                        loading = false
                                     }
                                 },
                                 enabled = canStartMerge(patchFilePath,oldFilePath),

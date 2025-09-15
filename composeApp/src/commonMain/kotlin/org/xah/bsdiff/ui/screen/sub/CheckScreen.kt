@@ -37,7 +37,7 @@ fun CheckScreen() {
     var loading by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf<Boolean?>(null) }
 
-    val cor = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
     LaunchedEffect(newFilePath,oldFilePath) {
         isSuccess = null
     }
@@ -61,14 +61,14 @@ fun CheckScreen() {
                         supportingContent = oldFilePath?.let { { Text(it) } },
                         headlineContent = { Text("选择或拖入文件1") },
                         modifier = Modifier.weight(.5f).clickable {
-                            cor.launch { oldFilePath = pickFile() }
+                            scope.launch { oldFilePath = pickFile() }
                         }
                     )
                     TransplantListItem(
                         supportingContent = newFilePath?.let { { Text(it) } },
                         headlineContent = { Text("选择或拖入文件2") },
                         modifier = Modifier.weight(.5f).clickable {
-                            cor.launch { newFilePath = pickFile() }
+                            scope.launch { newFilePath = pickFile() }
                         }
                     )
                 }
@@ -76,10 +76,12 @@ fun CheckScreen() {
                 RowCenter {
                     Button(
                         onClick = {
-                            oldFilePath?.let {
-                                newFilePath?.let { it1 ->
-                                    isSuccess = isSimpleFile(it, it1) { load ->
-                                        loading = load
+                            scope.launch {
+                                oldFilePath?.let {
+                                    newFilePath?.let { it1 ->
+                                        isSuccess = isSimpleFile(it, it1) { load ->
+                                            loading = load
+                                        }
                                     }
                                 }
                             }

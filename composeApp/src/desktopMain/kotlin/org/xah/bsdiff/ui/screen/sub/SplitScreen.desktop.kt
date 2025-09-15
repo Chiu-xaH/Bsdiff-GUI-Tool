@@ -14,3 +14,4 @@ actual fun getFileName(path: String): String {
 }
 
 actual fun applyPath(path: String, file: String): String = File(path,file).absolutePath
+actual fun getCpuCoreCount(): Int = Runtime.getRuntime().availableProcessors()
