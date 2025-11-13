@@ -87,7 +87,7 @@ fun MergeScreen() {
                                     scope.launch {
                                         loading = true
                                         // 开始生成补丁包
-                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName))
+                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName).absolutePath)
                                         loading = false
                                     }
                                 },

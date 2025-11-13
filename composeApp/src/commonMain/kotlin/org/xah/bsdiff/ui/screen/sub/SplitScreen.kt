@@ -33,12 +33,14 @@ import androidx.compose.ui.zIndex
 import bsdiffapp.composeapp.generated.resources.Res
 import bsdiffapp.composeapp.generated.resources.delete
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.serialization.json.Json
+import org.xah.bsdiff.logic.model.Patch
+import org.xah.bsdiff.logic.model.PatchMeta
 import org.xah.bsdiff.logic.util.addIfNotExists
 import org.xah.bsdiff.logic.util.createPatch
 import org.xah.bsdiff.logic.util.openFileExplorer
@@ -51,6 +53,11 @@ import org.xah.bsdiff.ui.component.TransplantListItem
 import org.xah.bsdiff.ui.screen.DoLoadingUI
 import org.xah.bsdiff.ui.util.DropUI
 import org.xah.bsdiff.ui.util.DropsUI
+import java.io.File
+import java.io.FileOutputStream
+import java.security.MessageDigest
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 
 @Composable
@@ -71,7 +78,6 @@ fun SplitScreen() {
         newFilePath?.let { patchFilePath = getDefaultPath(it) }
         newFilePath?.let { newFileName = getFileName(it) }
     }
-
 
     if(!loading) {
         Box {
@@ -113,12 +119,62 @@ fun SplitScreen() {
                                         val results = oldFilePath.map { oldPath ->
                                             async(Dispatchers.IO) {
                                                 semaphore.withPermit {
-                                                    val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
-                                                    val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName))
-                                                    if(result) {
+//                                                    val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
+//                                                    val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName))
+//                                                    if(result) {
+//                                                        successCount++
+//                                                    } else {
+//                                                        failCount++
+//                                                    }
+                                                    try {
+                                                        val oldFile = File(oldPath)
+                                                        val newFile = File(newFilePath!!)
+
+                                                        // 1. 生成 diff.bin
+                                                        val diffFileName = "${getFileName(oldPath)}_to_${newFileName}.bin"
+                                                        val diffFile = applyPath(patchFilePath, diffFileName)
+                                                        val result = createPatch(oldPath, newFilePath!!, diffFile.absolutePath)
+                                                        if (!result) {
+                                                            failCount++
+                                                            return@withPermit false
+                                                        }
+
+                                                        // 2. 计算 MD5
+                                                        val oldMd5 = getMd5(oldFile)
+                                                        val newMd5 = getMd5(newFile)
+
+                                                        // 3. 构造 Patch 元数据
+                                                        val patchMeta = Patch(
+                                                            source = PatchMeta(md5 = oldMd5, versionCode = null, versionName = null),
+                                                            target = PatchMeta(md5 = newMd5, versionCode = null, versionName = null)
+                                                        )
+                                                        val metaFile = File(diffFile.parentFile, "meta_${System.currentTimeMillis()}.json")
+                                                        val jsonText = Json.encodeToString(Patch.serializer(), patchMeta)
+                                                        metaFile.writeText(jsonText)
+
+                                                        // 4. 打包成 .patch
+                                                        val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
+                                                        val patchFile = File(diffFile.parentFile, patchFileName)
+                                                        ZipOutputStream(FileOutputStream(patchFile)).use { zip ->
+                                                            zip.putNextEntry(ZipEntry("diff.bin"))
+                                                            zip.write(diffFile.readBytes())
+                                                            zip.closeEntry()
+
+                                                            zip.putNextEntry(ZipEntry("meta.json"))
+                                                            zip.write(metaFile.readBytes())
+                                                            zip.closeEntry()
+                                                        }
+
+                                                        // 5. 清理临时文件
+                                                        diffFile.delete()
+                                                        metaFile.delete()
+
                                                         successCount++
-                                                    } else {
+                                                        true
+                                                    } catch (e: Exception) {
+                                                        e.printStackTrace()
                                                         failCount++
+                                                        false
                                                     }
                                                 }
                                             }
@@ -128,20 +184,6 @@ fun SplitScreen() {
                                         val finalResults = results.awaitAll()
                                         isSuccess = true
                                         loading = false
-//                                        async {
-//                                            // 开始生成补丁包
-//                                            for(i in oldFilePath) {
-//                                                val patchFileName = getPatchFileName(newFileName, getFileName(i))
-//                                                val result = createPatch(i, newFilePath!!, applyPath(patchFilePath, patchFileName))
-//                                                if(result) {
-//                                                    successCount++
-//                                                } else {
-//                                                    failCount++
-//                                                }
-//                                            }
-//                                            isSuccess = true
-//                                        }.await()
-//                                        launch { loading = false }
                                     }
                                 },
                                 enabled = canStartPatches(newFilePath,oldFilePath),
@@ -247,6 +289,17 @@ fun canStartPatch(path1 : String?, path2: String?) : Boolean {
     return true
 }
 
+fun getMd5(file: File): String {
+    val md = MessageDigest.getInstance("MD5")
+    file.inputStream().use { input ->
+        val buffer = ByteArray(8192)
+        var bytesRead: Int
+        while (input.read(buffer).also { bytesRead = it } != -1) {
+            md.update(buffer, 0, bytesRead)
+        }
+    }
+    return md.digest().joinToString("") { "%02x".format(it) }
+}
 fun getPatchFileName(newFileName : String,oldFileName : String) : String {
     // 补丁名为 旧文件_patched_新文件.新文件的扩展名
 //    val e = getFileExtension(newFileName)
@@ -256,14 +309,20 @@ fun getPatchFileName(newFileName : String,oldFileName : String) : String {
 }
 
 // 在共享模块中定义expect函数
-expect fun getDefaultPath(path: String): String
+fun getDefaultPath(path: String): String {
+    val file = File(path)
+    return file.parent ?: ""  // 获取文件所在的目录
+}
 // 在共享模块中定义expect函数
-expect fun getFileName(path: String): String
+fun getFileName(path: String): String {
+    val file = File(path)
+    return file.name  // 获取文件名（包括扩展名）
+}
 
 fun getFileExtension(fileName: String): String = fileName.substringAfterLast(".", "")
 
 fun getFileNameWithoutExtension(fileName: String): String = fileName.substringBeforeLast(".") // 去掉扩展名
 // 连接
-expect fun applyPath(path: String,file : String) : String
+fun applyPath(path: String, file: String): File = File(path,file)
 
-expect fun getCpuCoreCount() : Int
+fun getCpuCoreCount(): Int = Runtime.getRuntime().availableProcessors()

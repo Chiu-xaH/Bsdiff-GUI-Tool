@@ -1,3 +1,7 @@
 package org.xah.bsdiff.logic.util
 
-expect fun sendNotice()
+const val WINDOW_NAME = "增量更新工具"
+
+fun sendNotice() {
+    BsdiffJNI().warn(WINDOW_NAME)
+}
