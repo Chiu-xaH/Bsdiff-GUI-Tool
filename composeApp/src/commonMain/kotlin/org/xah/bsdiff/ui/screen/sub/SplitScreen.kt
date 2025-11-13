@@ -16,6 +16,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +80,8 @@ fun SplitScreen() {
         newFilePath?.let { newFileName = getFileName(it) }
     }
 
+    var useMeta by remember { mutableStateOf(true) }
+
     if(!loading) {
         Box {
             Row(modifier = Modifier.padding(5.dp)) {
@@ -89,6 +92,25 @@ fun SplitScreen() {
                 DropsUI("旧文件", modifier = Modifier.fillMaxSize().weight(.5f),oldFilePath)
             }
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                StyleCardListItem(
+                    headlineContent = {
+                        Text("写入元数据")
+                    },
+                    supportingContent = {
+                        Text("开启后，将附带元数据文件(目标MD5和源MD5作为唯一标识)")
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = useMeta,
+                            onCheckedChange = {
+                                useMeta = it
+                            }
+                        )
+                    },
+                    modifier = Modifier.clickable {
+                        useMeta = !useMeta
+                    }
+                )
                 Row {
                     TransplantListItem(
                         headlineContent = { Text("选择或拖入新文件") },
@@ -119,62 +141,65 @@ fun SplitScreen() {
                                         val results = oldFilePath.map { oldPath ->
                                             async(Dispatchers.IO) {
                                                 semaphore.withPermit {
-//                                                    val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
-//                                                    val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName))
-//                                                    if(result) {
-//                                                        successCount++
-//                                                    } else {
-//                                                        failCount++
-//                                                    }
-                                                    try {
-                                                        val oldFile = File(oldPath)
-                                                        val newFile = File(newFilePath!!)
+                                                    if(useMeta) {
+                                                        try {
+                                                            val oldFile = File(oldPath)
+                                                            val newFile = File(newFilePath!!)
 
-                                                        // 1. 生成 diff.bin
-                                                        val diffFileName = "${getFileName(oldPath)}_to_${newFileName}.bin"
-                                                        val diffFile = applyPath(patchFilePath, diffFileName)
-                                                        val result = createPatch(oldPath, newFilePath!!, diffFile.absolutePath)
-                                                        if (!result) {
+                                                            // 1. 生成 diff.bin
+                                                            val diffFileName = "${getFileName(oldPath)}_to_${newFileName}.bin"
+                                                            val diffFile = applyPath(patchFilePath, diffFileName)
+                                                            val result = createPatch(oldPath, newFilePath!!, diffFile.absolutePath)
+                                                            if (!result) {
+                                                                failCount++
+                                                                return@withPermit false
+                                                            }
+
+                                                            // 2. 计算 MD5
+                                                            val oldMd5 = getMd5(oldFile)
+                                                            val newMd5 = getMd5(newFile)
+
+                                                            // 3. 构造 Patch 元数据
+                                                            val patchMeta = Patch(
+                                                                source = PatchMeta(md5 = oldMd5, versionCode = null, versionName = null),
+                                                                target = PatchMeta(md5 = newMd5, versionCode = null, versionName = null)
+                                                            )
+                                                            val metaFile = File(diffFile.parentFile, "meta_${System.currentTimeMillis()}.json")
+                                                            val jsonText = Json.encodeToString(Patch.serializer(), patchMeta)
+                                                            metaFile.writeText(jsonText)
+
+                                                            // 4. 打包成 .patch
+                                                            val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
+                                                            val patchFile = File(diffFile.parentFile, patchFileName)
+                                                            ZipOutputStream(FileOutputStream(patchFile)).use { zip ->
+                                                                zip.putNextEntry(ZipEntry("diff.bin"))
+                                                                zip.write(diffFile.readBytes())
+                                                                zip.closeEntry()
+
+                                                                zip.putNextEntry(ZipEntry("meta.json"))
+                                                                zip.write(metaFile.readBytes())
+                                                                zip.closeEntry()
+                                                            }
+
+                                                            // 5. 清理临时文件
+                                                            diffFile.delete()
+                                                            metaFile.delete()
+
+                                                            successCount++
+                                                            true
+                                                        } catch (e: Exception) {
+                                                            e.printStackTrace()
                                                             failCount++
-                                                            return@withPermit false
+                                                            false
                                                         }
-
-                                                        // 2. 计算 MD5
-                                                        val oldMd5 = getMd5(oldFile)
-                                                        val newMd5 = getMd5(newFile)
-
-                                                        // 3. 构造 Patch 元数据
-                                                        val patchMeta = Patch(
-                                                            source = PatchMeta(md5 = oldMd5, versionCode = null, versionName = null),
-                                                            target = PatchMeta(md5 = newMd5, versionCode = null, versionName = null)
-                                                        )
-                                                        val metaFile = File(diffFile.parentFile, "meta_${System.currentTimeMillis()}.json")
-                                                        val jsonText = Json.encodeToString(Patch.serializer(), patchMeta)
-                                                        metaFile.writeText(jsonText)
-
-                                                        // 4. 打包成 .patch
+                                                    } else {
                                                         val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
-                                                        val patchFile = File(diffFile.parentFile, patchFileName)
-                                                        ZipOutputStream(FileOutputStream(patchFile)).use { zip ->
-                                                            zip.putNextEntry(ZipEntry("diff.bin"))
-                                                            zip.write(diffFile.readBytes())
-                                                            zip.closeEntry()
-
-                                                            zip.putNextEntry(ZipEntry("meta.json"))
-                                                            zip.write(metaFile.readBytes())
-                                                            zip.closeEntry()
+                                                        val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName).absolutePath)
+                                                        if(result) {
+                                                            successCount++
+                                                        } else {
+                                                            failCount++
                                                         }
-
-                                                        // 5. 清理临时文件
-                                                        diffFile.delete()
-                                                        metaFile.delete()
-
-                                                        successCount++
-                                                        true
-                                                    } catch (e: Exception) {
-                                                        e.printStackTrace()
-                                                        failCount++
-                                                        false
                                                     }
                                                 }
                                             }
