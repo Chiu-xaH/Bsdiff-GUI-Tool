@@ -80,7 +80,8 @@ fun SplitScreen() {
         newFilePath?.let { newFileName = getFileName(it) }
     }
 
-    var useMeta by remember { mutableStateOf(true) }
+    var useMeta by remember { mutableStateOf(false) }
+    var useHPatch by remember { mutableStateOf(false) }
 
     if(!loading) {
         Box {
@@ -92,25 +93,51 @@ fun SplitScreen() {
                 DropsUI("旧文件", modifier = Modifier.fillMaxSize().weight(.5f),oldFilePath)
             }
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                StyleCardListItem(
-                    headlineContent = {
-                        Text("写入元数据")
-                    },
-                    supportingContent = {
-                        Text("开启后，将附带元数据文件(目标MD5和源MD5作为唯一标识)")
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = useMeta,
-                            onCheckedChange = {
-                                useMeta = it
+                Row {
+                    if (!useHPatch) {
+                        StyleCardListItem(
+                            headlineContent = {
+                                Text("写入元数据")
+                            },
+                            supportingContent = {
+                                Text("开启后，将附带元数据文件(目标MD5和源MD5作为唯一标识)")
+                            },
+                            trailingContent = {
+                                Switch(
+                                    checked = useMeta,
+                                    onCheckedChange = {
+                                        useMeta = it
+                                    }
+                                )
+                            },
+                            cardModifier = Modifier.weight(.5f),
+                            modifier = Modifier.clickable {
+                                useMeta = !useMeta
                             }
                         )
-                    },
-                    modifier = Modifier.clickable {
-                        useMeta = !useMeta
                     }
-                )
+
+                    StyleCardListItem(
+                        cardModifier = Modifier.weight(.5f),
+                        headlineContent = {
+                            Text("当前算法")
+                        },
+                        supportingContent = {
+                            Text("${if (useHPatch) "HPatchDiff(更高效)" else "Bsdiff"}")
+                        },
+                        trailingContent = {
+                            Switch(
+                                checked = useHPatch,
+                                onCheckedChange = {
+                                    useHPatch = it
+                                }
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            useHPatch = !useHPatch
+                        }
+                    )
+                }
                 Row {
                     TransplantListItem(
                         headlineContent = { Text("选择或拖入新文件") },
@@ -149,7 +176,7 @@ fun SplitScreen() {
                                                             // 1. 生成 diff.bin
                                                             val diffFileName = "${getFileName(oldPath)}_to_${newFileName}.bin"
                                                             val diffFile = applyPath(patchFilePath, diffFileName)
-                                                            val result = createPatch(oldPath, newFilePath!!, diffFile.absolutePath)
+                                                            val result = createPatch(oldPath, newFilePath!!, diffFile.absolutePath,useHPatch)
                                                             if (!result) {
                                                                 failCount++
                                                                 return@withPermit false
@@ -194,7 +221,7 @@ fun SplitScreen() {
                                                         }
                                                     } else {
                                                         val patchFileName = getPatchFileName(newFileName, getFileName(oldPath))
-                                                        val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName).absolutePath)
+                                                        val result = createPatch(oldPath, newFilePath!!, applyPath(patchFilePath, patchFileName).absolutePath,useHPatch)
                                                         if(result) {
                                                             successCount++
                                                         } else {
@@ -219,7 +246,6 @@ fun SplitScreen() {
                         }
                     )
                 }
-                BottomTip("${getCpuCoreCount()} Core Cpu")
                 for (index in oldFilePath.indices) {
                     TransplantListItem(
                         headlineContent = oldFilePath[index].let { { Text(it) } },

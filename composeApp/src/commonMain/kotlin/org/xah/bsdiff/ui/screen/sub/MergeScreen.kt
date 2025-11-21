@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.xah.bsdiff.logic.util.HPatch
 import org.xah.bsdiff.logic.util.mergePatch
 import org.xah.bsdiff.logic.util.openFileExplorer
 import org.xah.bsdiff.logic.util.pickFile
@@ -47,6 +49,7 @@ fun MergeScreen() {
         oldFilePath?.let { oldFileName = getFileName(it) }
         patchFilePath?.let { patchFileName = getFileName(it) }
     }
+    var useHPatch by remember { mutableStateOf(false) }
 
     if(!loading) {
         Box {
@@ -60,6 +63,21 @@ fun MergeScreen() {
                 }
             }
             Column {
+                Row {
+//                    if (!useHPatch) {
+//                        StyleCardListItem(
+//                            headlineContent = {
+//                                Text("补丁类型")
+//                            },
+//                            supportingContent = {
+//                                Text("Bsdiff/Bsdiff带元数据/HPatchDiff")
+//                            },
+//                            modifier = Modifier.clickable {
+//                                useMeta = !useMeta
+//                            }
+//                        )
+//                    }
+                }
                 Row {
                     TransplantListItem(
                         headlineContent = { Text("选择或拖入旧文件") },
@@ -87,7 +105,7 @@ fun MergeScreen() {
                                     scope.launch {
                                         loading = true
                                         // 开始生成补丁包
-                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName).absolutePath)
+                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName).absolutePath,useHPatch)
                                         loading = false
                                     }
                                 },

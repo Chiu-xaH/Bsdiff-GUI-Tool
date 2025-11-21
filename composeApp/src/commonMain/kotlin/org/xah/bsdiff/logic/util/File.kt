@@ -27,4 +27,17 @@ fun openFileExplorer(path : String) {
     }
 }
 
+fun extractExe(name: String): File {
+    val temp = File(System.getProperty("java.io.tmpdir"), name)
+    if (!temp.exists()) {
+        val stream = HPatch::class.java.classLoader.getResourceAsStream("bin/$name")
+            ?: error("Cannot find $name in resources/bin/")
+        temp.outputStream().use { out ->
+            stream.use { it.copyTo(out) }
+        }
+    }
+    temp.setExecutable(true)
+    return temp
+}
+
 //expect suspend fun pickFiles() : String?
