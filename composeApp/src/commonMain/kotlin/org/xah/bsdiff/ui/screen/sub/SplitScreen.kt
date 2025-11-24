@@ -81,7 +81,7 @@ fun SplitScreen() {
     }
 
     var useMeta by remember { mutableStateOf(false) }
-    var useHPatch by remember { mutableStateOf(false) }
+    var useHPatch by remember { mutableStateOf(true) }
 
     if(!loading) {
         Box {
@@ -123,7 +123,7 @@ fun SplitScreen() {
                             Text("当前算法")
                         },
                         supportingContent = {
-                            Text("${if (useHPatch) "HPatchDiff(更高效)" else "Bsdiff"}")
+                            Text(if (useHPatch) "HPatchDiff -f(更高效)" else "Bsdiff")
                         },
                         trailingContent = {
                             Switch(

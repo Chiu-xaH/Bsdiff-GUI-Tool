@@ -23,14 +23,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import org.xah.bsdiff.logic.model.Patch
+import org.xah.bsdiff.logic.model.PatchMeta
 import org.xah.bsdiff.logic.util.HPatch
+import org.xah.bsdiff.logic.util.createPatch
 import org.xah.bsdiff.logic.util.mergePatch
 import org.xah.bsdiff.logic.util.openFileExplorer
 import org.xah.bsdiff.logic.util.pickFile
+import org.xah.bsdiff.logic.util.sendNotice
+import org.xah.bsdiff.logic.util.showMsg
 import org.xah.bsdiff.ui.component.StyleCardListItem
 import org.xah.bsdiff.ui.component.TransplantListItem
 import org.xah.bsdiff.ui.screen.DoLoadingUI
 import org.xah.bsdiff.ui.util.DropUI
+import java.io.File
+import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @Composable
 fun MergeScreen() {
@@ -49,7 +59,8 @@ fun MergeScreen() {
         oldFilePath?.let { oldFileName = getFileName(it) }
         patchFilePath?.let { patchFileName = getFileName(it) }
     }
-    var useHPatch by remember { mutableStateOf(false) }
+    var useHPatch by remember { mutableStateOf(true) }
+    var useMeta by remember { mutableStateOf(false) }
 
     if(!loading) {
         Box {
@@ -64,19 +75,46 @@ fun MergeScreen() {
             }
             Column {
                 Row {
-//                    if (!useHPatch) {
-//                        StyleCardListItem(
-//                            headlineContent = {
-//                                Text("补丁类型")
-//                            },
-//                            supportingContent = {
-//                                Text("Bsdiff/Bsdiff带元数据/HPatchDiff")
-//                            },
-//                            modifier = Modifier.clickable {
-//                                useMeta = !useMeta
-//                            }
-//                        )
-//                    }
+                    if (!useHPatch) {
+                        StyleCardListItem(
+                            headlineContent = {
+                                Text("元数据")
+                            },
+                            trailingContent = {
+                                Switch(
+                                    checked = useMeta,
+                                    onCheckedChange = {
+                                        useMeta = it
+                                    }
+                                )
+                            },
+                            cardModifier = Modifier.weight(.5f),
+                            modifier = Modifier.clickable {
+                                useMeta = !useMeta
+                            }
+                        )
+                    }
+
+                    StyleCardListItem(
+                        cardModifier = Modifier.weight(.5f),
+                        headlineContent = {
+                            Text("当前算法")
+                        },
+                        supportingContent = {
+                            Text(if (useHPatch) "HPatchDiff -f" else "Bsdiff")
+                        },
+                        trailingContent = {
+                            Switch(
+                                checked = useHPatch,
+                                onCheckedChange = {
+                                    useHPatch = it
+                                }
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            useHPatch = !useHPatch
+                        }
+                    )
                 }
                 Row {
                     TransplantListItem(
@@ -103,10 +141,14 @@ fun MergeScreen() {
                             Button(
                                 onClick = {
                                     scope.launch {
-                                        loading = true
-                                        // 开始生成补丁包
-                                        isSuccess = mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName).absolutePath,useHPatch)
-                                        loading = false
+                                        if(useMeta) {
+                                            showMsg("正在开发")
+                                        } else {
+                                            loading = true
+                                            // 开始生成补丁包
+                                            isSuccess =  mergePatch(oldFilePath!!, patchFilePath!!, applyPath(newFilePath ,newFileName).absolutePath,useHPatch)
+                                            loading = false
+                                        }
                                     }
                                 },
                                 enabled = canStartMerge(patchFilePath,oldFilePath),
